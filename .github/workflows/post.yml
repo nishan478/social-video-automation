@@ -39,4 +39,4 @@ jobs:
           BUFFER_TIKTOK_CHANNEL_ID: ${{ secrets.BUFFER_TIKTOK_CHANNEL_ID }}
           DEFAULT_CAPTION: ${{ secrets.DEFAULT_CAPTION }}
         run: |
-          python scripts/post_from_r2.py
+          python -m scripts.post_from_r2
