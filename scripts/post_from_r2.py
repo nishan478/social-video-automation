@@ -1,7 +1,7 @@
 import json
 import os
 
-from common import (
+from script.common import (
     check_public_media,
     env,
     gql,
