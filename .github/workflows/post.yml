@@ -26,17 +26,19 @@ jobs:
 
       - name: Run video posting script
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          ALLOWED_USER_ID: ${{ secrets.ALLOWED_USER_ID }}
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          R2_PREFIX: ${{ secrets.R2_PREFIX }}
           R2_PUBLIC_URL: ${{ secrets.R2_PUBLIC_URL }}
+
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
-          BUFFER_API_BASE_URL: ${{ secrets.BUFFER_API_BASE_URL }}
-          BUFFER_INSTAGRAM_ID: ${{ secrets.BUFFER_INSTAGRAM_ID }}
-          BUFFER_TIKTOK_CHANNEL_ID: ${{ secrets.BUFFER_TIKTOK_CHANNEL_ID }}
-          DEFAULT_CAPTION: ${{ secrets.DEFAULT_CAPTION }}
+
+          INSTAGRAM_CHANNEL_ID: ${{ secrets.INSTAGRAM_CHANNEL_ID }}
+          TIKTOK_CHANNEL_ID: ${{ secrets.TIKTOK_CHANNEL_ID }}
+
+          POST_CAPTION: ${{ secrets.POST_CAPTION }}
+
         run: |
           python -m scripts.post_from_r2
