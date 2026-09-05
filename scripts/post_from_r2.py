@@ -46,15 +46,23 @@ def find_next_video():
     return videos[0]
 
 
-def create_video_post(channel_id, video_url, caption):
+def create_instagram_reel(channel_id, video_url, caption):
     mutation = f"""
-    mutation CreateVideoPost {{
+    mutation CreateInstagramReel {{
       createPost(
         input: {{
           text: {gql_string(caption)}
           channelId: {gql_string(channel_id)}
           schedulingType: automatic
           mode: addToQueue
+
+          metadata: {{
+            instagram: {{
+              type: reel
+              shouldShareToFeed: true
+            }}
+          }}
+
           assets: [
             {{
               video: {{
@@ -73,6 +81,7 @@ def create_video_post(channel_id, video_url, caption):
             text
           }}
         }}
+
         ... on MutationError {{
           message
         }}
@@ -86,19 +95,78 @@ def create_video_post(channel_id, video_url, caption):
 
     if payload.get("message"):
         raise RuntimeError(
-            f"Buffer could not create post: {payload['message']}"
+            f"Buffer could not create Instagram Reel: {payload['message']}"
         )
 
     post = payload.get("post")
 
     if not post:
         raise RuntimeError(
-            "Buffer did not return a created post: "
+            "Buffer did not return a created Instagram post: "
             + json.dumps(payload)
         )
 
     print(
-        f"SUCCESS: Posted/scheduled for channel {channel_id}. "
+        f"SUCCESS: Instagram Reel created/scheduled. "
+        f"Post ID: {post['id']}"
+    )
+
+
+def create_tiktok_post(channel_id, video_url, caption):
+    mutation = f"""
+    mutation CreateTikTokPost {{
+      createPost(
+        input: {{
+          text: {gql_string(caption)}
+          channelId: {gql_string(channel_id)}
+          schedulingType: automatic
+          mode: addToQueue
+
+          assets: [
+            {{
+              video: {{
+                url: {gql_string(video_url)}
+                metadata: {{
+                  thumbnailOffset: 2000
+                }}
+              }}
+            }}
+          ]
+        }}
+      ) {{
+        ... on PostActionSuccess {{
+          post {{
+            id
+            text
+          }}
+        }}
+
+        ... on MutationError {{
+          message
+        }}
+      }}
+    }}
+    """
+
+    result = gql(mutation)
+
+    payload = result["data"]["createPost"]
+
+    if payload.get("message"):
+        raise RuntimeError(
+            f"Buffer could not create TikTok post: {payload['message']}"
+        )
+
+    post = payload.get("post")
+
+    if not post:
+        raise RuntimeError(
+            "Buffer did not return a created TikTok post: "
+            + json.dumps(payload)
+        )
+
+    print(
+        f"SUCCESS: TikTok post created/scheduled. "
         f"Post ID: {post['id']}"
     )
 
@@ -128,15 +196,17 @@ def main():
         "New video! 🚀",
     )
 
-    print("Creating Instagram post...")
-    create_video_post(
+    print("Creating Instagram Reel...")
+
+    create_instagram_reel(
         env("INSTAGRAM_CHANNEL_ID"),
         video_url,
         caption,
     )
 
     print("Creating TikTok post...")
-    create_video_post(
+
+    create_tiktok_post(
         env("TIKTOK_CHANNEL_ID"),
         video_url,
         caption,
