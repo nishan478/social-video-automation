@@ -1,5 +1,4 @@
 import json
-import os
 
 from script.common import (
     check_public_media,
@@ -23,10 +22,11 @@ VIDEO_EXTENSIONS = (
 def find_next_video():
     client = r2_client()
     bucket = env("R2_BUCKET_NAME")
+    prefix = env("R2_PREFIX")
 
     response = client.list_objects_v2(
         Bucket=bucket,
-        Prefix=env("R2_PREFIX"),
+        Prefix=prefix,
     )
 
     videos = []
@@ -39,7 +39,7 @@ def find_next_video():
 
     if not videos:
         raise RuntimeError(
-            "No video files were found in your R2 bucket."
+            f"No video files were found in your R2 bucket with prefix: {prefix}"
         )
 
     videos.sort()
