@@ -120,7 +120,7 @@ def create_tiktok_post(channel_id, video_url, caption):
           text: {gql_string(caption)}
           channelId: {gql_string(channel_id)}
           schedulingType: automatic
-          mode: addToQueue
+          mode: shareNow
 
           assets: [
             {{
