@@ -21,11 +21,13 @@ VIDEO_EXTENSIONS = (
 
 def get_video_key():
     """
-    Use VIDEO_KEY when supplied by GitHub Actions.
-    Otherwise fall back to the first video found in R2.
+    Use VIDEO_KEY supplied by GitHub Actions.
+
+    If VIDEO_KEY is empty, find the first video
+    available in the configured R2 bucket/prefix.
     """
 
-    video_key = env("VIDEO_KEY")
+    video_key = env("VIDEO_KEY", "").strip()
 
     if video_key:
         print(f"Using requested video: {video_key}")
@@ -35,7 +37,7 @@ def get_video_key():
 
     client = r2_client()
     bucket = env("R2_BUCKET_NAME")
-    prefix = env("R2_PREFIX")
+    prefix = env("R2_PREFIX", "")
 
     response = client.list_objects_v2(
         Bucket=bucket,
@@ -52,11 +54,17 @@ def get_video_key():
 
     if not videos:
         raise RuntimeError(
-            f"No video files found with prefix: {prefix}"
+            f"No video files found in R2 bucket '{bucket}' "
+            f"with prefix '{prefix}'"
         )
 
     videos.sort()
-    return videos[0]
+
+    selected_video = videos[0]
+
+    print(f"Automatically selected video: {selected_video}")
+
+    return selected_video
 
 
 def create_instagram_reel(channel_id, video_url, caption):
@@ -103,6 +111,7 @@ def create_instagram_reel(channel_id, video_url, caption):
     """
 
     result = gql(mutation)
+
     payload = result["data"]["createPost"]
 
     if payload.get("message"):
@@ -162,6 +171,7 @@ def create_tiktok_post(channel_id, video_url, caption):
     """
 
     result = gql(mutation)
+
     payload = result["data"]["createPost"]
 
     if payload.get("message"):
@@ -179,7 +189,7 @@ def create_tiktok_post(channel_id, video_url, caption):
         )
 
     print(
-        f"SUCCESS: TikTok post submitted. "
+        f"SUCCESS: TikTok video submitted. "
         f"Post ID: {post['id']}"
     )
 
@@ -193,6 +203,8 @@ def main():
         "TIKTOK_CHANNEL_ID",
     )
 
+    # Get VIDEO_KEY from GitHub Actions,
+    # or automatically select a video from R2.
     key = get_video_key()
 
     print(f"Selected R2 video: {key}")
@@ -201,6 +213,7 @@ def main():
 
     print(f"Public video URL: {video_url}")
 
+    # Verify that Buffer can access the video publicly.
     check_public_media(video_url)
 
     caption = env(
