@@ -42,6 +42,7 @@ jobs:
 
           POST_CAPTION: ${{ secrets.POST_CAPTION }}
 
+          # Receives the exact R2 video key from the Telegram Worker
           VIDEO_KEY: ${{ inputs.video_key }}
 
         run: |
