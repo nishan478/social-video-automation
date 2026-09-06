@@ -2,9 +2,11 @@ name: Post Video Automatically
 
 on:
   workflow_dispatch:
-
-  schedule:
-    - cron: "0 12 * * *"
+    inputs:
+      video_key:
+        description: "R2 key of the video to post"
+        required: false
+        type: string
 
 jobs:
   post-video:
@@ -39,6 +41,8 @@ jobs:
           TIKTOK_CHANNEL_ID: ${{ secrets.TIKTOK_CHANNEL_ID }}
 
           POST_CAPTION: ${{ secrets.POST_CAPTION }}
+
+          VIDEO_KEY: ${{ inputs.video_key }}
 
         run: |
           python -m scripts.post_from_r2
