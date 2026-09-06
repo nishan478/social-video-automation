@@ -5,7 +5,7 @@ on:
     inputs:
       video_key:
         description: "R2 key of the video to post"
-        required: false
+        required: true
         type: string
 
 jobs:
