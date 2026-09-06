@@ -19,7 +19,20 @@ VIDEO_EXTENSIONS = (
 )
 
 
-def find_next_video():
+def get_video_key():
+    """
+    Use VIDEO_KEY when supplied by GitHub Actions.
+    Otherwise fall back to the first video found in R2.
+    """
+
+    video_key = env("VIDEO_KEY")
+
+    if video_key:
+        print(f"Using requested video: {video_key}")
+        return video_key
+
+    print("VIDEO_KEY not provided. Finding a video automatically...")
+
     client = r2_client()
     bucket = env("R2_BUCKET_NAME")
     prefix = env("R2_PREFIX")
@@ -39,7 +52,7 @@ def find_next_video():
 
     if not videos:
         raise RuntimeError(
-            f"No video files were found in your R2 bucket with prefix: {prefix}"
+            f"No video files found with prefix: {prefix}"
         )
 
     videos.sort()
@@ -54,7 +67,7 @@ def create_instagram_reel(channel_id, video_url, caption):
           text: {gql_string(caption)}
           channelId: {gql_string(channel_id)}
           schedulingType: automatic
-          mode: addToQueue
+          mode: shareNow
 
           metadata: {{
             instagram: {{
@@ -90,24 +103,24 @@ def create_instagram_reel(channel_id, video_url, caption):
     """
 
     result = gql(mutation)
-
     payload = result["data"]["createPost"]
 
     if payload.get("message"):
         raise RuntimeError(
-            f"Buffer could not create Instagram Reel: {payload['message']}"
+            f"Buffer could not create Instagram Reel: "
+            f"{payload['message']}"
         )
 
     post = payload.get("post")
 
     if not post:
         raise RuntimeError(
-            "Buffer did not return a created Instagram post: "
+            "Buffer did not return an Instagram post: "
             + json.dumps(payload)
         )
 
     print(
-        f"SUCCESS: Instagram Reel created/scheduled. "
+        f"SUCCESS: Instagram Reel submitted. "
         f"Post ID: {post['id']}"
     )
 
@@ -149,24 +162,24 @@ def create_tiktok_post(channel_id, video_url, caption):
     """
 
     result = gql(mutation)
-
     payload = result["data"]["createPost"]
 
     if payload.get("message"):
         raise RuntimeError(
-            f"Buffer could not create TikTok post: {payload['message']}"
+            f"Buffer could not create TikTok post: "
+            f"{payload['message']}"
         )
 
     post = payload.get("post")
 
     if not post:
         raise RuntimeError(
-            "Buffer did not return a created TikTok post: "
+            "Buffer did not return a TikTok post: "
             + json.dumps(payload)
         )
 
     print(
-        f"SUCCESS: TikTok post created/scheduled. "
+        f"SUCCESS: TikTok post submitted. "
         f"Post ID: {post['id']}"
     )
 
@@ -174,14 +187,13 @@ def create_tiktok_post(channel_id, video_url, caption):
 def main():
     require(
         "R2_BUCKET_NAME",
-        "R2_PREFIX",
         "R2_PUBLIC_URL",
         "BUFFER_API_KEY",
         "INSTAGRAM_CHANNEL_ID",
         "TIKTOK_CHANNEL_ID",
     )
 
-    key = find_next_video()
+    key = get_video_key()
 
     print(f"Selected R2 video: {key}")
 
@@ -196,7 +208,7 @@ def main():
         "New video! 🚀",
     )
 
-    print("Creating Instagram Reel...")
+    print("Posting Instagram Reel...")
 
     create_instagram_reel(
         env("INSTAGRAM_CHANNEL_ID"),
@@ -204,7 +216,7 @@ def main():
         caption,
     )
 
-    print("Creating TikTok post...")
+    print("Posting TikTok video...")
 
     create_tiktok_post(
         env("TIKTOK_CHANNEL_ID"),
